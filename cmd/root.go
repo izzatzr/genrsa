@@ -10,21 +10,32 @@ import (
 	"github.com/spf13/viper"
 )
 
-var cfgFile string
+var (
+	cfgFile      string
+	removeOnExit bool
+	RSAKey       generate.Opts
+)
 
 var rootCmd = &cobra.Command{
 	Use:   "genrsa",
 	Short: "Generate RSA private Key & public Key",
 	Long:  `Easy RSA priv & pub file generation from CLI`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		pvKeyFile, pbKeyFile, err := generate.Create()
+
+		err := RSAKey.Create()
 		if err != nil {
 			return err
 		}
 
 		println("Files Generated")
-		println(fmt.Sprintf("Private Key File: %s", pvKeyFile.Name()))
-		println(fmt.Sprintf("Public Key File: %s", pbKeyFile.Name()))
+		println(fmt.Sprintf("Private Key File: %s", RSAKey.PrivateKey.Path))
+		println(fmt.Sprintf("Public Key File: %s", RSAKey.PublicKey.Path))
+
+		if removeOnExit {
+			defer os.Remove(RSAKey.PrivateKey.Blob.File.Name())
+			defer os.Remove(RSAKey.PublicKey.Blob.File.Name())
+		}
+
 		return nil
 	},
 }
@@ -41,7 +52,10 @@ func init() {
 
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.genrsa.yaml)")
 
-	rootCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	rootCmd.Flags().StringVarP(&RSAKey.PrivateKey.Path, "privateKey", "v", "", "path to store private key file (default is store on OS temp dir")
+	rootCmd.Flags().StringVarP(&RSAKey.PublicKey.Path, "pb", "b", "", "path to store public key file (default is store on OS temp dir")
+	rootCmd.Flags().IntVarP(&RSAKey.PrivateKey.BitSize, "BitSize", "t", 4096, "bitsize")
+	rootCmd.Flags().BoolVarP(&removeOnExit, "removeOnExit", "d", false, "remove on exit")
 }
 
 func initConfig() {
