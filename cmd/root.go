@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"genrsa/pkg/generate"
 	"os"
 
-	"github.com/spf13/cobra"
-
 	homedir "github.com/mitchellh/go-homedir"
+	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
 
@@ -17,6 +17,14 @@ var rootCmd = &cobra.Command{
 	Short: "Generate RSA private Key & public Key",
 	Long:  `Easy RSA priv & pub file generation from CLI`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		pvKeyFile, pbKeyFile, err := generate.Create()
+		if err != nil {
+			return err
+		}
+
+		println("Files Generated")
+		println(fmt.Sprintf("Private Key File: %s", pvKeyFile.Name()))
+		println(fmt.Sprintf("Public Key File: %s", pbKeyFile.Name()))
 		return nil
 	},
 }
